@@ -1,5 +1,6 @@
 const Stop = require('../models/Stop');
 const Trip = require('../models/Trip');
+const Activity = require('../models/Activity');
 const { AppError } = require('../middleware/errorHandler');
 
 exports.addStop = async (req, res, next) => {
@@ -7,13 +8,11 @@ exports.addStop = async (req, res, next) => {
     const { tripId } = req.params;
     const { cityId, cityName, startDate, endDate, notes } = req.body;
     
-    // Verify trip belongs to user
     const trip = await Trip.findOne({ _id: tripId, userId: req.userId });
     if (!trip) {
       return next(new AppError('Trip not found', 404));
     }
     
-    // Get count of existing stops for order
     const stopCount = await Stop.countDocuments({ tripId });
     
     const stop = await Stop.create({
@@ -65,10 +64,8 @@ exports.deleteStop = async (req, res, next) => {
       return next(new AppError('Stop not found', 404));
     }
     
-    // Delete associated activities
     await Activity.deleteMany({ stopId });
     
-    // Reorder remaining stops
     const stops = await Stop.find({ tripId: stop.tripId })
       .sort({ order: 1 });
     
@@ -89,7 +86,7 @@ exports.deleteStop = async (req, res, next) => {
 exports.reorderStops = async (req, res, next) => {
   try {
     const { stopId } = req.params;
-    const { newOrder } = req.body; // New position (1-based)
+    const { newOrder } = req.body;
     
     const stop = await Stop.findById(stopId);
     if (!stop) {
@@ -99,13 +96,11 @@ exports.reorderStops = async (req, res, next) => {
     const oldOrder = stop.order;
     
     if (newOrder > oldOrder) {
-      // Move down: shift stops between oldOrder+1 and newOrder up
       await Stop.updateMany(
         { tripId: stop.tripId, order: { $gt: oldOrder, $lte: newOrder } },
         { $inc: { order: -1 } }
       );
     } else if (newOrder < oldOrder) {
-      // Move up: shift stops between newOrder and oldOrder-1 down
       await Stop.updateMany(
         { tripId: stop.tripId, order: { $gte: newOrder, $lt: oldOrder } },
         { $inc: { order: 1 } }
@@ -118,6 +113,25 @@ exports.reorderStops = async (req, res, next) => {
     res.json({
       success: true,
       message: 'Stops reordered successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Add this missing function
+exports.getStopsByTrip = async (req, res, next) => {
+  try {
+    const { tripId } = req.params;
+    
+    const stops = await Stop.find({ tripId })
+      .sort({ order: 1 })
+      .populate('activities');
+    
+    res.json({
+      success: true,
+      count: stops.length,
+      data: stops
     });
   } catch (error) {
     next(error);

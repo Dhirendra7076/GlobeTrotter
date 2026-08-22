@@ -1,11 +1,9 @@
-# Environment variables
-.env
-
-# Dependencies
 node_modules/
-
-# Logs
-*.log
-
-# OS files
+.env
 .DS_Store
+*.log
+dist/
+build/
+coverage/
+.vscode/
+.idea/

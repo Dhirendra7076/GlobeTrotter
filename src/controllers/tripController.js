@@ -209,3 +209,34 @@ exports.copyTrip = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// Get public trip (no auth required)
+exports.getPublicTrip = async (req, res, next) => {
+  try {
+    const { tripId } = req.params;
+    
+    const trip = await Trip.findOne({ 
+      _id: tripId,
+      isPublic: true
+    }).populate({
+      path: 'stops',
+      options: { sort: { order: 1 } },
+      populate: {
+        path: 'activities',
+        options: { sort: { date: 1, startTime: 1 } }
+      }
+    });
+    
+    if (!trip) {
+      return next(new AppError('Trip not found or not public', 404));
+    }
+    
+    res.json({
+      success: true,
+      data: trip
+    });
+  } catch (error) {
+    next(error);
+  }
+};

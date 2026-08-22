@@ -68,3 +68,21 @@ exports.deleteActivity = async (req, res, next) => {
     next(error);
   }
 };
+
+// Add this missing function
+exports.getActivitiesByStop = async (req, res, next) => {
+  try {
+    const { stopId } = req.params;
+    
+    const activities = await Activity.find({ stopId })
+      .sort({ date: 1, startTime: 1 });
+    
+    res.json({
+      success: true,
+      count: activities.length,
+      data: activities
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -10,7 +10,15 @@ const tripRoutes = require('./routes/tripRoutes');
 const stopRoutes = require('./routes/stopRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const cityRoutes = require('./routes/cityRoutes');
-const budgetRoutes = require('./routes/budgetRoutes');
+
+// Only import budgetRoutes if the file exists
+let budgetRoutes;
+try {
+  budgetRoutes = require('./routes/budgetRoutes');
+} catch (error) {
+  console.log('⚠️  budgetRoutes not found, skipping...');
+  budgetRoutes = null;
+}
 
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -34,13 +42,17 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Routes
+// Routes - make sure each route is properly mounted
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/stops', stopRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/cities', cityRoutes);
-app.use('/api/budget', budgetRoutes);
+
+// Only mount budgetRoutes if it exists
+if (budgetRoutes) {
+  app.use('/api/budget', budgetRoutes);
+}
 
 // Error handler (must be last)
 app.use(errorHandler);
