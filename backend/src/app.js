@@ -45,13 +45,13 @@ app.get('/api/health', (req, res) => {
 // Routes - make sure each route is properly mounted
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
-app.use('/api/stops', stopRoutes);
-app.use('/api/activities', activityRoutes);
+app.use('/api', stopRoutes);
+app.use('/api', activityRoutes);
 app.use('/api/cities', cityRoutes);
 
 // Only mount budgetRoutes if it exists
 if (budgetRoutes) {
-  app.use('/api/budget', budgetRoutes);
+  app.use('/api', budgetRoutes);
 }
 
 // Error handler (must be last)
